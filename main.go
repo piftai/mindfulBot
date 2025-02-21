@@ -3,6 +3,7 @@ package main
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
+	"mindfulBot/db"
 	"mindfulBot/utils"
 	"os"
 )
@@ -11,6 +12,10 @@ func main() {
 	utils.Env()
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("BOT_TOKEN"))
 	if err != nil {
+		log.Panic(err)
+	}
+
+	if db, err := db.Init(); err != nil {
 		log.Panic(err)
 	}
 
