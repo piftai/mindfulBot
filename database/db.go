@@ -1,10 +1,13 @@
-package db
+package database
 
 import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"log"
 	"os"
+	"time"
 )
 
 type Reminder struct {
@@ -29,5 +32,12 @@ func Init() (*sqlx.DB, error) {
 		return nil, fmt.Errorf("Error connecting to database: %w", err)
 	}
 	DB = db
+	log.Printf("Succesful authorization in DB")
 	return db, err
+}
+
+func SaveReminder(userID int64, username string, day string, selectTime string) error {
+
+	_, err := DB.Exec(`INSERT INTO reminders (user_id, username, day, time, remind_1h, remind_24h) VALUES ($1, $2, $3, $4, $5, $6)`, userID, username, day, selectTime, time.Now(), time.Now())
+	return err
 }
