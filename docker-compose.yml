@@ -18,7 +18,7 @@ services:
 
   db:
     image: postgres:13-alpine
-    container_name: mindfulBot
+    container_name: mindfulBot-db
     environment:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASSWORD}
