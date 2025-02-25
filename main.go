@@ -4,6 +4,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"mindfulBot/database"
+	"mindfulBot/scheduler"
 	"mindfulBot/utils"
 	"os"
 )
@@ -22,6 +23,7 @@ func main() {
 	_ = db
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
+	scheduler.Init(bot, db)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
