@@ -39,11 +39,11 @@ func Init() (*sqlx.DB, error) {
 
 func SaveReminder(userID int64, username, day, timeStr string) error {
 	// Парсим время консультации
-	consultationTime, err := time.Parse("15:00", timeStr)
+	consultationTime, err := time.Parse("15:04", timeStr)
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга времени: %w", err)
 	}
-
+	fmt.Printf("!!! consultationTime: %v\n", consultationTime)
 	// Вычисляем текущую дату и время
 	now := time.Now()
 
