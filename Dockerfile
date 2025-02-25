@@ -8,7 +8,7 @@ RUN go mod download
 
 RUN go build -o mindfulBot .
 
-FROM alphine:latest
+FROM alpine:latest
 
 WORKDIR /app
 
