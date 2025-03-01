@@ -1,4 +1,4 @@
-![Build Status](https://github.com/piftai/mindfulBot/workflows/go/badge.svg)
+![Build Status](https://github.com/piftai/mindfulBot/actions/workflows/go.yml/badge.svg)
 
 Этот проект будет сделан по спринтам - для удобства,
 за каждый спринт - это один логический этап в работе.
