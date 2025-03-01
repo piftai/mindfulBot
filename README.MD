@@ -1,3 +1,4 @@
+![example workflow]
 (https://github.com/piftai/mindfulBot/actions/workflows/main.yml/badge.svg)
 
 Этот проект будет сделан по спринтам - для удобства,
