@@ -12,6 +12,14 @@ FROM alpine:latest
 
 WORKDIR /app
 
+# Устанавливаем tzdata для поддержки временных зон
+RUN apk add --no-cache tzdata
+
+# Устанавливаем московское время
+ENV TZ=Europe/Moscow
+RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 COPY --from=builder /app/mindfulBot .
 
 COPY .env .

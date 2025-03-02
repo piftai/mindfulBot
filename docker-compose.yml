@@ -27,6 +27,8 @@ services:
       TZ: Europe/Moscow
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro  # Монтируем временную зону с хоста
+      - /usr/share/zoneinfo/Europe/Moscow:/etc/timezone:ro  # Монтируем информацию о временной зоне
     ports:
       - "5432:5432"
 
