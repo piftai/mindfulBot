@@ -13,6 +13,7 @@ services:
       - DB_PASSWORD=${PASSWORD}
       - DB_NAME=${DBNAME}
       - DB_SSLMODE=${SSLMODE}
+      - TZ=Europe/Moscow
     depends_on:
       - db
 
@@ -23,6 +24,7 @@ services:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASSWORD}
       POSTGRES_DB: ${DBNAME}
+      TZ: Europe/Moscow
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

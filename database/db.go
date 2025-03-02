@@ -43,7 +43,7 @@ func SaveReminder(userID int64, username, day, timeStr string) error {
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга времени: %w", err)
 	}
-	fmt.Printf("!!! consultationTime: %v\n", consultationTime)
+	log.Printf("SaveReminder is working: !!! consultationTime: %v\n", consultationTime)
 	// Вычисляем текущую дату и время
 	now := time.Now()
 

@@ -34,6 +34,7 @@ func getReminders(db *sqlx.DB) ([]database.Reminder, error) {
 		log.Printf("Error get reminders: %v", err)
 		return nil, err
 	}
+	log.Printf("getReminders is working, current reminders: %v", reminders)
 	return reminders, nil
 }
 
