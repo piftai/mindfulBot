@@ -58,14 +58,16 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder database.Reminder)
 		" завари вкусный чай или просто настройся на работу с собой.\n "+
 		"До встречи!", reminder.Day, reminder.Time, paylink)
 	msg := tgbotapi.NewMessage(reminder.UserID, msgText)
-	bot.Send(msg)
 	isUpdated, err := updateReminder(db, reminder)
 	if !isUpdated {
-		log.Printf("Reminder ID:%v did not update, but send.", reminder.ID)
+		log.Printf("Reminder ID:%v did not update, and did not send.", reminder.ID)
+		return
 	}
 	if err != nil {
 		log.Printf("Reminder ID:%v Error: %v", reminder.ID, err)
+		return
 	}
+	bot.Send(msg)
 }
 
 func updateReminder(db *sqlx.DB, reminder database.Reminder) (bool, error) {

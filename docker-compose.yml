@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASSWORD}
       POSTGRES_DB: ${DBNAME}
-      TZ: Europe/Moscow
+      TZ: "Europe/Moscow"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro  # Монтируем временную зону с хоста
