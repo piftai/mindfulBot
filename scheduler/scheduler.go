@@ -72,28 +72,28 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder database.Reminder)
 
 func updateReminder(db *sqlx.DB, reminder database.Reminder) (bool, error) {
 	isUpdated := false
-	if reminder.Remind24h.Time.After(time.Now()) {
+	if reminder.Remind24h.Valid && !reminder.Remind24h.Time.After(time.Now()) {
 		newRemind24h := sql.NullTime{
-			Time:  reminder.Remind24h.Time.Add(7 * time.Hour * 24),
+			Time:  reminder.Remind24h.Time.Add(7 * 24 * time.Hour),
 			Valid: true,
 		}
 		reminder.Remind24h = newRemind24h
 		isUpdated = true
 	}
-	if reminder.Remind1h.Time.After(time.Now()) {
+	if reminder.Remind1h.Valid && !reminder.Remind1h.Time.After(time.Now()) {
 		newRemind1h := sql.NullTime{
-			Time:  reminder.Remind1h.Time.Add(7 * time.Hour * 24),
+			Time:  reminder.Remind1h.Time.Add(7 * 24 * time.Hour),
 			Valid: true,
 		}
 		reminder.Remind1h = newRemind1h
 		isUpdated = true
 	}
 	_, err := db.Exec(`
-	UPDATE reminders
-	SET remind_24h = $1,
-		remind_1h = $2
-	WHERE id = $3
-	`, reminder.Remind24h, reminder.Remind1h, reminder.ID)
+        UPDATE reminders
+        SET remind_24h = $1,
+            remind_1h = $2
+        WHERE id = $3
+    `, reminder.Remind24h, reminder.Remind1h, reminder.ID)
 	if err != nil {
 		log.Printf("Ошибка при обновлении напоминания %d: %v", reminder.ID, err)
 		return false, err
