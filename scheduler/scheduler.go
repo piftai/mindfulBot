@@ -14,7 +14,7 @@ import (
 const paylink = "https://www.tinkoff.ru/rm/r_eKPOyRWmNB.XnfPKWHfzr/ZqYFh89264"
 
 func Init(bot *tgbotapi.BotAPI, db *sqlx.DB) {
-	c := cron.New()
+	c := cron.New(cron.WithLocation(time.FixedZone("UTC-3", -8*60*60)))
 	_, err := c.AddFunc("@every 1m", func() { checkReminders(bot, db) })
 	if err != nil {
 		log.Printf("Error add func in cron: %v", err)
