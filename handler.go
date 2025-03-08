@@ -30,7 +30,7 @@ func handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 }
 
 func handleNote(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	// Создаем кнопки для выбора дня
+	// creating buttons to pick a day
 	days := []string{"пн", "вт", "ср", "чт", "пт"}
 	var buttons []tgbotapi.InlineKeyboardButton
 
@@ -38,12 +38,11 @@ func handleNote(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(day, "day_"+day))
 	}
 
-	// Создаем клавиатуру с кнопками
+	// creating keyboard with buttons. that is inline buttons, so we need to turn on this func in botfather
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons)
 	reply := tgbotapi.NewMessage(msg.Chat.ID, "Давай выберем день для напоминания:")
 	reply.ReplyMarkup = keyboard
 
-	// Отправляем сообщение
 	bot.Send(reply)
 }
 
@@ -58,35 +57,32 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 }
 
 func handleDaySelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
-	// Извлекаем выбранный день
+	// to understand how it works check tg documentation
 	day := strings.TrimPrefix(update.CallbackQuery.Data, "day_")
 
-	// Получаем доступные временные слоты для этого дня
 	times := getAvailableTimes(day)
 
-	// Создаем кнопки для выбора времени
+	// creating buttons to pick a time
 	var buttons []tgbotapi.InlineKeyboardButton
 	for _, time := range times {
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(time, "time_"+day+"_"+time))
 	}
 
-	// Создаем клавиатуру с кнопками
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons)
 	reply := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Выбери время:")
 	reply.ReplyMarkup = keyboard
 
-	// Отправляем сообщение
 	bot.Send(reply)
 }
 
 func handleTimeSelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
-	// Извлекаем день и время
+	// extract day and time
 	data := strings.TrimPrefix(update.CallbackQuery.Data, "time_")
 	parts := strings.Split(data, "_")
 	day := parts[0]
 	time := parts[1]
 
-	// Сохраняем напоминание в базу данных
+	// save reminder into database
 	userID := update.CallbackQuery.From.ID
 	username := update.CallbackQuery.From.UserName
 	err := database.SaveReminder(userID, username, day, time)
@@ -98,12 +94,12 @@ func handleTimeSelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 
 	msg := fmt.Sprintf("Напоминание на %s %s сохранено. Если хочешь добавить "+
 		"еще один день в свой календарь, то пропиши /note", day, time)
-	// Отправляем подтверждение
+
 	bot.Send(tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, msg))
 }
 
 func getAvailableTimes(day string) []string {
-	// Пример: временные слоты для каждого дня
+	// slots for each day
 	slots := map[string][]string{
 		"пн": {"10:00", "12:00", "18:00"},
 		"вт": {"11:00", "14:00", "16:00"},

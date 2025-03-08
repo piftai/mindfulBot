@@ -7,11 +7,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/robfig/cron/v3"
 	"log"
-	"mindfulBot/database"
+	"mindfulBot/models"
 	"time"
 )
 
-const paylink = "https://www.tinkoff.ru/rm/r_eKPOyRWmNB.XnfPKWHfzr/ZqYFh89264"
+const paylink = "https://www.tinkoff.ru/rm/r_eKPOyRWmNB.XnfPKWHfzr/ZqYFh89264" // link to pay. not a secret so
 
 func Init(bot *tgbotapi.BotAPI, db *sqlx.DB) {
 	c := cron.New(cron.WithLocation(time.FixedZone("MSK", 3*60*60)))
@@ -23,8 +23,8 @@ func Init(bot *tgbotapi.BotAPI, db *sqlx.DB) {
 	log.Println("Cron was started successful!")
 }
 
-func getReminders(db *sqlx.DB) ([]database.Reminder, error) {
-	var reminders []database.Reminder
+func getReminders(db *sqlx.DB) ([]models.Reminder, error) {
+	var reminders []models.Reminder
 	err := db.Select(&reminders, `
 	SELECT id, user_id, username, day, time, remind_1h, remind_24h
 	FROM reminders
@@ -49,7 +49,7 @@ func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB) {
 	}
 }
 
-func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder database.Reminder) {
+func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
 	msgText := fmt.Sprintf("У тебя запланирована сессия.\n📅 День недели: %v\n🕒 "+
 		"Время: %v\n💳 Ссылка на оплату: %v\n\n"+
 		"Если у тебя изменились планы, напиши специалисту"+
@@ -70,7 +70,7 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder database.Reminder)
 	bot.Send(msg)
 }
 
-func updateReminder(db *sqlx.DB, reminder database.Reminder) (bool, error) {
+func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 	isUpdated := false
 	if reminder.Remind24h.Valid && !reminder.Remind24h.Time.After(time.Now()) {
 		newRemind24h := sql.NullTime{

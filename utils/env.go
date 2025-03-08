@@ -6,7 +6,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Env Инициализация файла конфигураций.
+// Env init environment variables
 func Env() {
 	err := godotenv.Load(".env")
 	if err != nil {
