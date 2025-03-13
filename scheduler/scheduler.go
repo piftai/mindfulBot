@@ -60,7 +60,7 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
 	msg := tgbotapi.NewMessage(reminder.UserID, msgText)
 	isUpdated, err := updateReminder(db, reminder)
 	if !isUpdated {
-		log.Printf("Reminder ID:%v did not update, and did not send.", reminder.ID)
+		log.Printf("Reminder ID:%v did not update, and did not send.\n\nerror is: %v", reminder.ID, err)
 		return
 	}
 	if err != nil {
