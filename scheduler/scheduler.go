@@ -82,7 +82,7 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		isUpdated = true
 	}
 	log.Printf("reminder.Remind1h.Time.UTC().Before(time.Now().UTC()) = %v", reminder.Remind1h.Time.UTC().Before(time.Now().UTC()))
-	if reminder.Remind1h.Time.UTC().Before(time.Now().UTC()) {
+	if reminder.Remind1h.Time.UTC().Before(time.Now()) {
 		newRemind1h := sql.NullTime{
 			Time:  reminder.Remind1h.Time.Add(7 * 24 * time.Hour),
 			Valid: true,
@@ -90,8 +90,8 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		reminder.Remind1h = newRemind1h
 		isUpdated = true
 	}
-	log.Printf("remind_1h: %v\n", reminder.Remind1h.Time)
-	log.Printf("remind_24h: %v\n", reminder.Remind24h.Time)
+	log.Printf("remind_1h: %v\n", reminder.Remind1h.Time.UTC())
+	log.Printf("remind_24h: %v\n", reminder.Remind24h.Time.UTC())
 	log.Printf("time.Now().UTC(): %v\n", time.Now().UTC())
 	_, err := db.Exec(`
         UPDATE reminders
