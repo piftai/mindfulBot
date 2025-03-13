@@ -56,7 +56,7 @@ func SaveReminder(userID int64, username, day, timeStr string) error {
 		consultationDate.Day(),
 		consultationTime.Hour(),
 		consultationTime.Minute(),
-		0, 0, time.Local,
+		0, 0, time.FixedZone("MSK", 3*60*60),
 	)
 
 	remind24h := consultationDateTime.Add(-24 * time.Hour)
