@@ -72,7 +72,7 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
 
 func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 	isUpdated := false
-	if reminder.Remind24h.Valid && !reminder.Remind24h.Time.After(time.Now()) {
+	if reminder.Remind24h.Valid && reminder.Remind24h.Time.After(time.Now()) {
 		newRemind24h := sql.NullTime{
 			Time:  reminder.Remind24h.Time.Add(7 * 24 * time.Hour),
 			Valid: true,
@@ -80,7 +80,7 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		reminder.Remind24h = newRemind24h
 		isUpdated = true
 	}
-	if reminder.Remind1h.Valid && !reminder.Remind1h.Time.After(time.Now()) {
+	if reminder.Remind1h.Valid && reminder.Remind1h.Time.After(time.Now()) {
 		newRemind1h := sql.NullTime{
 			Time:  reminder.Remind1h.Time.Add(7 * 24 * time.Hour),
 			Valid: true,
