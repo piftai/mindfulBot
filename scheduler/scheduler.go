@@ -82,7 +82,7 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		isUpdated = true
 	}
 	log.Printf("reminder.Remind1h.Time.Before(time.Now()) = %v", reminder.Remind1h.Time.Before(time.Now()))
-	if reminder.Remind1h.Time.After(time.Now()) {
+	if reminder.Remind1h.Time.Before(time.Now()) {
 		newRemind1h := sql.NullTime{
 			Time:  reminder.Remind1h.Time.Add(7 * 24 * time.Hour),
 			Valid: true,
