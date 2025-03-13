@@ -90,6 +90,9 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		reminder.Remind1h = newRemind1h
 		isUpdated = true
 	}
+	log.Printf("remind_1h: %v\n", reminder.Remind1h.Time)
+	log.Printf("remind_24h: %v\n", reminder.Remind24h.Time)
+	log.Printf("time.Now(): %v\n", time.Now())
 	_, err := db.Exec(`
         UPDATE reminders
         SET remind_24h = $1,
