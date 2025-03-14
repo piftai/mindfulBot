@@ -88,11 +88,11 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		reminder.Remind1h = newRemind1h
 		isUpdated = true
 	}
-	log.Printf("remind_1h.UTC(): %v\n", reminder.Remind1h.Time.UTC())
-	log.Printf("remind_24h.UTC(): %v\n", reminder.Remind24h.Time.UTC())
-	log.Printf("time.Now().UTC(): %v\n", time.Now().UTC())
-	log.Printf("reminder.Remind1h.Time.UTC().Before(time.Now()): %v\n", reminder.Remind1h.Time.UTC().Before(time.Now()))
-	log.Printf("reminder.Remind24h.Time.UTC().Before(time.Now().UTC()): %v\n", reminder.Remind24h.Time.UTC().Before(time.Now().UTC()))
+	log.Printf("remind_1h.UTC(): %v\n", reminder.Remind1h.Time.In(time.FixedZone("MSK", 3*60*60)))
+	log.Printf("remind_24h.UTC(): %v\n", reminder.Remind24h.Time.In(time.FixedZone("MSK", 3*60*60)))
+	log.Printf("time.Now().UTC(): %v\n", time.Now().In(time.FixedZone("MSK", 3*60*60)))
+	log.Printf("reminder.Remind1h.Time.UTC().Before(time.Now()): %v\n", reminder.Remind1h.Time.In(time.FixedZone("MSK", 3*60*60)).Before(time.Now().In(time.FixedZone("MSK", 3*60*60))))
+	log.Printf("reminder.Remind24h.Time.UTC().Before(time.Now().UTC()): %v\n", reminder.Remind24h.Time.In(time.FixedZone("MSK", 3*60*60)).Before(time.Now().In(time.FixedZone("MSK", 3*60*60))))
 	_, err := db.Exec(`
         UPDATE reminders
         SET remind_24h = $1,
