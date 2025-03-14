@@ -72,7 +72,6 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
 
 func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 	isUpdated := false
-	log.Printf("reminder.Remind24h.Time.UTC().Before(time.Now().UTC()) = %v", reminder.Remind24h.Time.UTC().Before(time.Now().UTC()))
 	if reminder.Remind24h.Time.UTC().Before(time.Now().UTC()) {
 		newRemind24h := sql.NullTime{
 			Time:  reminder.Remind24h.Time.Add(7 * 24 * time.Hour),
@@ -81,7 +80,6 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		reminder.Remind24h = newRemind24h
 		isUpdated = true
 	}
-	log.Printf("reminder.Remind1h.Time.UTC().Before(time.Now().UTC()) = %v", reminder.Remind1h.Time.UTC().Before(time.Now().UTC()))
 	if reminder.Remind1h.Time.UTC().Before(time.Now()) {
 		newRemind1h := sql.NullTime{
 			Time:  reminder.Remind1h.Time.Add(7 * 24 * time.Hour),
@@ -90,9 +88,11 @@ func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 		reminder.Remind1h = newRemind1h
 		isUpdated = true
 	}
-	log.Printf("remind_1h: %v\n", reminder.Remind1h.Time.UTC())
-	log.Printf("remind_24h: %v\n", reminder.Remind24h.Time.UTC())
+	log.Printf("remind_1h.UTC(): %v\n", reminder.Remind1h.Time.UTC())
+	log.Printf("remind_24h.UTC(): %v\n", reminder.Remind24h.Time.UTC())
 	log.Printf("time.Now().UTC(): %v\n", time.Now().UTC())
+	log.Printf("reminder.Remind1h.Time.UTC().Before(time.Now()): %v\n", reminder.Remind1h.Time.UTC().Before(time.Now()))
+	log.Printf("reminder.Remind24h.Time.UTC().Before(time.Now().UTC()): %v\n", reminder.Remind24h.Time.UTC().Before(time.Now().UTC()))
 	_, err := db.Exec(`
         UPDATE reminders
         SET remind_24h = $1,
