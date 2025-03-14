@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"database/sql"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jmoiron/sqlx"
@@ -72,27 +71,22 @@ func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
 
 func updateReminder(db *sqlx.DB, reminder models.Reminder) (bool, error) {
 	isUpdated := false
-	if reminder.Remind24h.Time.UTC().Before(time.Now().UTC()) {
-		newRemind24h := sql.NullTime{
-			Time:  reminder.Remind24h.Time.Add(7 * 24 * time.Hour),
-			Valid: true,
-		}
+	if reminder.Remind24h.UTC().Before(time.Now().UTC()) {
+		newRemind24h := reminder.Remind24h.Add(7 * 24 * time.Hour)
 		reminder.Remind24h = newRemind24h
 		isUpdated = true
 	}
-	if reminder.Remind1h.Time.UTC().Before(time.Now()) {
-		newRemind1h := sql.NullTime{
-			Time:  reminder.Remind1h.Time.Add(7 * 24 * time.Hour),
-			Valid: true,
-		}
+	if reminder.Remind1h.UTC().Before(time.Now()) {
+		newRemind1h := reminder.Remind1h.Add(7 * 24 * time.Hour)
+
 		reminder.Remind1h = newRemind1h
 		isUpdated = true
 	}
-	log.Printf("remind_1h.Time: %v\n", reminder.Remind1h.Time)
-	log.Printf("remind_24h.Time: %v\n", reminder.Remind24h.Time)
+	log.Printf("remind_1h.Time: %v\n", reminder.Remind1h)
+	log.Printf("remind_24h.Time: %v\n", reminder.Remind24h)
 	log.Printf("time.Now().UTC(): %v\n", time.Now().In(time.FixedZone("MSK", 3*60*60)))
-	log.Printf("reminder.Remind1h.Time.Before(time.Now().In(time.FixedZone(\"MSK\", 3*60*60)))): %v\n", reminder.Remind1h.Time.Before(time.Now().In(time.FixedZone("MSK", 3*60*60))))
-	log.Printf("reminder.Remind24h.Time.Before(time.Now().In(time.FixedZone(\"MSK\", 3*60*60)))): %v\n", reminder.Remind24h.Time.Before(time.Now().In(time.FixedZone("MSK", 3*60*60))))
+	log.Printf("reminder.Remind1h.Time.Before(time.Now().In(time.FixedZone(\"MSK\", 3*60*60)))): %v\n", reminder.Remind1h.Before(time.Now().In(time.FixedZone("MSK", 3*60*60))))
+	log.Printf("reminder.Remind24h.Time.Before(time.Now().In(time.FixedZone(\"MSK\", 3*60*60)))): %v\n", reminder.Remind24h.Before(time.Now().In(time.FixedZone("MSK", 3*60*60))))
 	_, err := db.Exec(`
         UPDATE reminders
         SET remind_24h = $1,
