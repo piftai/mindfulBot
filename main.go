@@ -5,6 +5,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"mindfulBot/database"
+	"mindfulBot/handlers"
 	"mindfulBot/scheduler"
 	"mindfulBot/utils"
 	"os"
@@ -35,9 +36,9 @@ func main() {
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			router(bot, update.Message)
+			handlers.Router(bot, update.Message, db)
 		} else if update.CallbackQuery != nil {
-			handleCallbackQuery(bot, update)
+			handlers.HandleCallbackQuery(bot, update)
 		}
 	}
 }
