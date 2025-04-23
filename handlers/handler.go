@@ -27,7 +27,7 @@ func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 		case "set":
 			handleSet(bot, message)
 		case "delete":
-
+			handleDelete(bot, message)
 		}
 	}
 	switch message.Text {
@@ -185,4 +185,35 @@ func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 	} else {
 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "У вас нет прав администратора для этой операции."))
 	}
+}
+
+func handleDelete(bot Bot, msg *tgbotapi.Message) {
+	listWords := strings.Fields(msg.Text)
+	for i := 0; i < len(listWords); i++ {
+		listWords[i] = strings.ToLower(listWords[i])
+	}
+
+	var username, id string
+
+	if len(listWords) <= 1 {
+		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Неправильный формат команды\nПопробуйте delete @username id_уведомления/all"))
+		return
+	} else if len(listWords) == 2 {
+		username = listWords[1]
+		id = "all"
+	} else if len(listWords) == 3 {
+		username = listWords[1]
+		id = listWords[2]
+	} else {
+		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Неправильный формат команды\nПопробуйте ``` delete @username id_уведомления/all ```"))
+		return
+	}
+
+	result, err := database.DeleteReminder(username, id)
+	if err != nil {
+		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "К сожалению, у меня не получилось удалить записи клиента\nПопробуйте снова"))
+		return
+	}
+
+	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("Отлично, у клиента %v удалилось %v записей.", username, result)))
 }

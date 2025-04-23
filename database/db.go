@@ -1,11 +1,13 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -67,6 +69,29 @@ func SaveReminder(userID int64, username, day, timeStr string, isAlways bool) er
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`, userID, username, day, timeStr, remind1h, remind24h, isAlways)
 	return err
+}
+
+func DeleteReminder(username string, reminderID string) (int64, error) {
+	var value sql.Result
+	var err error
+	if reminderID == "all" {
+		value, err = DB.Exec(`
+			DELETE FROM reminders 
+			WHERE username = $1
+		`, username)
+	} else {
+		IntReminderID, _ := strconv.Atoi(reminderID)
+		value, err = DB.Exec(`
+			DELETE FROM reminders 
+			WHERE username = $1 AND id = $2
+		`, username, IntReminderID)
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	countOfDeletedRows, _ := value.RowsAffected()
+	return countOfDeletedRows, nil
 }
 
 func nextWeekday(now time.Time, weekday time.Weekday) time.Time {
