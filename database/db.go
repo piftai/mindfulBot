@@ -26,7 +26,7 @@ func Init() (*sqlx.DB, error) {
 	return db, err
 }
 
-func SaveReminder(userID int64, username, day, timeStr string) error {
+func SaveReminder(userID int64, username, day, timeStr string, isAlways bool) error {
 	consultationTime, err := time.Parse("15:04", timeStr) // parsing consultation time
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга времени: %w", err)
@@ -63,13 +63,34 @@ func SaveReminder(userID int64, username, day, timeStr string) error {
 	remind1h := consultationDateTime.Add(-1 * time.Hour)
 
 	_, err = DB.Exec(`
-		INSERT INTO reminders (user_id, username, day, time, remind_1h, remind_24h)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, userID, username, day, timeStr, remind1h, remind24h)
+		INSERT INTO reminders (user_id, username, day, time, remind_1h, remind_24h, is_always)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, userID, username, day, timeStr, remind1h, remind24h, isAlways)
 	return err
 }
 
 func nextWeekday(now time.Time, weekday time.Weekday) time.Time {
 	daysUntilWeekday := (weekday - now.Weekday() + 7) % 7
 	return now.Add(time.Duration(daysUntilWeekday) * 24 * time.Hour)
+}
+
+func IsAdmin(username string) bool {
+	// перенести в пакет database
+	val, err := DB.Exec(` 
+		SELECT * FROM admins
+		WHERE username = $1
+	`, username)
+	if err != nil {
+		log.Printf("handleAdmin error: %v", err)
+		return false
+	}
+	rows, err := val.RowsAffected()
+	if err != nil {
+		log.Printf("handleAdmin error: %v", err)
+		return false
+	}
+	if rows == 1 {
+		return true
+	}
+	return false
 }

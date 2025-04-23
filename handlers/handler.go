@@ -3,16 +3,30 @@ package handlers
 import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/jmoiron/sqlx"
 	"log"
 	"mindfulBot/database"
 	"strings"
 )
 
-func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message, db *sqlx.DB) {
+/*
+Пакет handler обеспечивает обработку введенной команды/набора символов/слов.
+Это условный транпспортный слой, за маршрутизацию отвечает роутер, туда попадают все сообщения,
+и внутри роутера мы определяем какая функция обработает сообщение. Будем называть функции обрабатывающие
+сообщения хендлерами и называть handle<Something>
+
+Функции внутри этого пакета неимпортируемые вне пакета, кроме Router & HandleCallbackQuery
+
+HandleCallbackQuery нужен для работы с Inline buttons Telegram.
+Это отдельный роутер для Inline data -> он доступен вне пакета
+*/
+
+func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	listWords := strings.Fields(message.Text)
 	if len(listWords) > 1 {
-		switch listWords[0] {
+		switch strings.ToLower(listWords[0]) {
+		case "set":
+			handleSet(bot, message)
+		case "delete":
 
 		}
 	}
@@ -22,7 +36,7 @@ func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message, db *sqlx.DB) {
 	case "/note":
 		handleNote(bot, message)
 	case "adminPing":
-		handleAdmin(bot, message, db)
+		handleAdmin(bot, message)
 	}
 }
 
@@ -30,23 +44,15 @@ type Bot interface {
 	Send(c tgbotapi.Chattable) (tgbotapi.Message, error)
 }
 
-func handleAdmin(bot Bot, msg *tgbotapi.Message, db *sqlx.DB) {
-	// перенести в пакет database
-	val, err := db.Exec(` 
-		SELECT * FROM admins
-		WHERE username = $1
-	`, msg.From.UserName)
-	if err != nil {
-		log.Printf("handleAdmin error: %v", err)
-		return
-	}
-	rows, err := val.RowsAffected()
-	if err != nil {
-		log.Printf("handleAdmin error: %v", err)
-		return
-	}
-	if rows == 1 {
-		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Admin pong successful"))
+func handleAdmin(bot Bot, msg *tgbotapi.Message) {
+	if database.IsAdmin(msg.From.UserName) {
+		if _, err := bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Admin pong successful")); err != nil {
+			log.Printf("handleAdmin error: %v", err)
+		}
+	} else {
+		if _, err := bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Admin pong unsuccessful. Check your permission to this operation")); err != nil {
+			log.Printf("handleAdmin error: %v", err)
+		}
 	}
 }
 
@@ -122,7 +128,7 @@ func handleTimeSelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	// save reminder into database
 	userID := update.CallbackQuery.From.ID
 	username := update.CallbackQuery.From.UserName
-	err := database.SaveReminder(userID, username, day, time)
+	err := database.SaveReminder(userID, username, day, time, true) // true - потому что такого вида(запись от клиента, а не от админа) запись подразумевает напоминания всегда
 	if err != nil {
 		log.Printf("Error saving notification: %v", err)
 		bot.Send(tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Ошибка сохранения напоминания."))
@@ -146,4 +152,37 @@ func getAvailableTimes(day string) []string {
 	}
 
 	return slots[day]
+}
+
+func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
+	listWords := strings.Fields(msg.Text)
+	var isAlwaysNotification bool
+	for i := 0; i < len(listWords); i++ {
+		listWords[i] = strings.ToLower(listWords[i])
+	}
+
+	if len(listWords) >= 4 { // опциональный параметр
+		if listWords[4] == "once" {
+			isAlwaysNotification = false
+		} else {
+			isAlwaysNotification = true
+		}
+	} else {
+		isAlwaysNotification = false
+	}
+
+	if database.IsAdmin(msg.From.UserName) {
+		err := database.SaveReminder(msg.From.ID, listWords[1], listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
+		// пояснение к магическим цифрам выше:
+		// 1 - ник клиента которому нужно поставить напоминание
+		// 2 - день недели для напоминания
+		// 3 - время напоминания
+		if err != nil {
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Не удалось поставить напоминание. Попробуйте снова"))
+			return
+		}
+		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("Уведомление для %v успешно поставлено на %v %v", listWords[1], listWords[2], listWords[3])))
+	} else {
+		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "У вас нет прав администратора для этой операции."))
+	}
 }

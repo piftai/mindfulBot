@@ -36,7 +36,7 @@ func main() {
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			handlers.Router(bot, update.Message, db)
+			handlers.Router(bot, update.Message)
 		} else if update.CallbackQuery != nil {
 			handlers.HandleCallbackQuery(bot, update)
 		}
