@@ -102,7 +102,7 @@ func nextWeekday(now time.Time, weekday time.Weekday) time.Time {
 func IsAdmin(username string) bool {
 	// перенести в пакет database
 	val, err := DB.Exec(` 
-		SELECT * FROM admins
+		SELECT * FROM admin
 		WHERE username = $1
 	`, username)
 	if err != nil {
