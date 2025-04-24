@@ -161,7 +161,7 @@ func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 		listWords[i] = strings.ToLower(listWords[i])
 	}
 
-	if len(listWords) >= 5 { // опциональный параметр
+	if len(listWords) >= 5 { // опциональный параметр //
 		if listWords[4] == "once" {
 			isAlwaysNotification = false
 		} else {
