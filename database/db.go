@@ -99,8 +99,9 @@ func nextWeekday(now time.Time, weekday time.Weekday) time.Time {
 	return now.Add(time.Duration(daysUntilWeekday) * 24 * time.Hour)
 }
 
+// --------------
+
 func IsAdmin(username string) bool {
-	// перенести в пакет database
 	val, err := DB.Exec(` 
 		SELECT * FROM admin
 		WHERE username = $1
@@ -118,4 +119,17 @@ func IsAdmin(username string) bool {
 		return true
 	}
 	return false
+}
+
+// --------------
+
+func SaveUser(userID int64, username string) {
+	_, err := DB.Exec(`
+	INSERT INTO users (user_id, username)
+	VALUES($1, $2)
+	ON CONFLICT (user_id) DO NOTHING;
+	`, userID, username)
+	if err != nil {
+		log.Printf("SaveUser error: %v", err)
+	}
 }

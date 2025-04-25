@@ -21,6 +21,8 @@ HandleCallbackQuery нужен для работы с Inline buttons Telegram.
 */
 
 func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+	database.SaveUser(message.From.ID, message.From.UserName)
+
 	listWords := strings.Fields(message.Text)
 	if len(listWords) > 1 {
 		switch strings.ToLower(listWords[0]) {
