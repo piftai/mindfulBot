@@ -173,9 +173,14 @@ func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 		isAlwaysNotification = false
 	}
 
+	if string(listWords[1][0]) == "@" { // если передали username с собакой(@), то нам это не нужно
+		listWords[1] = listWords[1][1:]
+	}
+
 	if database.IsAdmin(msg.From.UserName) {
-		err := database.SaveReminder(msg.From.ID, listWords[1], listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
+		err := database.SaveReminder(database.GetUser(listWords[1]), listWords[1], listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
 		// пояснение к магическим цифрам выше:
+		// todo refactoring
 		// 1 - ник клиента которому нужно поставить напоминание
 		// 2 - день недели для напоминания
 		// 3 - время напоминания

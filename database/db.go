@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
+	"mindfulBot/models"
 	"os"
 	"strconv"
 	"time"
@@ -132,4 +133,18 @@ func SaveUser(userID int64, username string) {
 	if err != nil {
 		log.Printf("SaveUser error: %v", err)
 	}
+}
+
+func GetUser(username string) (userID int64) {
+	var user models.User
+	err := DB.QueryRow(`
+	SELECT user_id, username FROM users
+	WHERE username = $1
+	`, username).Scan(user.UserID)
+
+	if err != nil {
+		log.Printf("GetUser error:%v", err)
+	}
+
+	return user.UserID
 }
