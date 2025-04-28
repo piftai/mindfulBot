@@ -140,7 +140,7 @@ func GetUser(username string) (userID int64) {
 	err := DB.QueryRow(`
 	SELECT user_id, username FROM users
 	WHERE username = $1
-	`, username).Scan(user.UserID)
+	`, username).Scan(&user.UserID)
 
 	if err != nil {
 		log.Printf("GetUser error:%v", err)
