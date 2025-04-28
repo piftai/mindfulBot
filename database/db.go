@@ -136,7 +136,6 @@ func SaveUser(userID int64, username string) {
 }
 
 func GetUser(username string) (userID int64) {
-	log.Printf("GetUser, username:%v", username)
 	var user models.User
 	err := DB.QueryRow(`
 	SELECT user_id FROM users
