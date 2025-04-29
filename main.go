@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"mindfulBot/database"
@@ -9,7 +8,6 @@ import (
 	"mindfulBot/scheduler"
 	"mindfulBot/utils"
 	"os"
-	"time"
 )
 
 func main() {
@@ -18,13 +16,13 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Println("time is:", time.Now()) // for debug. remove later
+	log.Println("Bot initialized")
 	db, err := database.Init()
 	if err != nil {
 		log.Panic(err)
 	}
 	_ = db
-
+	log.Println("Database initialized")
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 	scheduler.Init(bot, db)
 
