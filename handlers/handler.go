@@ -195,6 +195,7 @@ func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 }
 
 func handleDelete(bot Bot, msg *tgbotapi.Message) {
+	// todo убирать у username 1-ый символ, если это @
 	listWords := strings.Fields(msg.Text)
 	for i := 0; i < len(listWords); i++ {
 		listWords[i] = strings.ToLower(listWords[i])
