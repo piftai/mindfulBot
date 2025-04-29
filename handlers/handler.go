@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"mindfulBot/database"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 /*
@@ -215,6 +216,10 @@ func handleDelete(bot Bot, msg *tgbotapi.Message) {
 	} else {
 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Неправильный формат команды\nПопробуйте ``` delete @username id_уведомления/all ```"))
 		return
+	}
+
+	if string(username[0]) == "@" {
+		username = username[1:]
 	}
 
 	result, err := database.DeleteReminder(username, id)
