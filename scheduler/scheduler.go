@@ -2,15 +2,30 @@ package scheduler
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/jmoiron/sqlx"
-	"github.com/robfig/cron/v3"
 	"log"
 	"mindfulBot/models"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/jmoiron/sqlx"
+	"github.com/robfig/cron/v3"
 )
 
-const paylink = "https://www.tinkoff.ru/rm/r_eKPOyRWmNB.XnfPKWHfzr/ZqYFh89264" // link to pay. not a secret so
+// ссылка для оплаты(not a secret so)
+const paylink = "https://www.tinkoff.ru/rm/r_eKPOyRWmNB.XnfPKWHfzr/ZqYFh89264"
+
+// текст уведомления напоминания(в константу вынести не получилось, т.к. Sprintf c переменными используется)
+func sendReminderMessage(reminder models.Reminder) string {
+	msgText := fmt.Sprintf("У тебя запланирована сессия.\n📅 День недели: %v\n🕒 "+
+		"Время: %v\n💳 Ссылка на оплату: %v\n\n"+
+		"Если у тебя изменились планы, напиши специалисту"+
+		" в личку заранее, чтобы обсудить перенос.\n\n"+
+		"Выдели это время только для себя. Найди спокойное место,"+
+		" завари вкусный чай или просто настройся на работу с собой.\n "+
+		"До встречи!", reminder.Day, reminder.Time, paylink)
+
+	return msgText
+}
 
 func Init(bot *tgbotapi.BotAPI, db *sqlx.DB) {
 	c := cron.New(cron.WithLocation(time.FixedZone("MSK", 3*60*60)))
@@ -49,14 +64,7 @@ func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB) {
 }
 
 func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
-	msgText := fmt.Sprintf("У тебя запланирована сессия.\n📅 День недели: %v\n🕒 "+
-		"Время: %v\n💳 Ссылка на оплату: %v\n\n"+
-		"Если у тебя изменились планы, напиши специалисту"+
-		" в личку заранее, чтобы обсудить перенос.\n\n"+
-		"Выдели это время только для себя. Найди спокойное место,"+
-		" завари вкусный чай или просто настройся на работу с собой.\n "+
-		"До встречи!", reminder.Day, reminder.Time, paylink)
-	msg := tgbotapi.NewMessage(reminder.UserID, msgText)
+	msg := tgbotapi.NewMessage(reminder.UserID, sendReminderMessage(reminder))
 	isUpdated, err := updateReminder(db, reminder)
 	if !isUpdated {
 		log.Printf("Reminder ID:%v did not update, and did not send.\n\nerror is: %v", reminder.ID, err)
