@@ -149,3 +149,51 @@ func GetUser(username string) (userID int64) {
 
 	return user.UserID
 }
+
+func GetUserById(id int) (userID int64) {
+	var user models.User
+	err := DB.QueryRow(`
+	SELECT user_id FROM users
+	WHERE id = $1
+	`, id).Scan(&user.UserID)
+
+	if err != nil {
+		log.Printf("GetUser error:%v", err)
+	}
+
+	return user.UserID
+}
+
+func GetUsers() ([]models.User, error) {
+	// Создаем слайс для хранения пользователей
+	var users []models.User
+
+	// Выполняем запрос
+	rows, err := DB.Query("SELECT id FROM users WHERE username = '' OR username IS NULL")
+	if err != nil {
+		log.Printf("GetUsers query error: %v", err)
+		return nil, err
+	}
+	defer rows.Close() // Закрываем результаты запроса
+
+	// Итерируемся по строкам результата
+	for rows.Next() {
+		var user models.User
+		// Сканируем данные в структуру
+		if err := rows.Scan(&user.Id); err != nil {
+			log.Printf("GetUsers scan error: %v", err)
+			return nil, err
+		}
+		// Добавляем пользователя в слайс
+		users = append(users, user)
+	}
+
+	// Проверяем ошибки после итерации
+	if err := rows.Err(); err != nil {
+		log.Printf("GetUsers rows iteration error: %v", err)
+		return nil, err
+	}
+
+	// Возвращаем слайс пользователей
+	return users, nil
+}

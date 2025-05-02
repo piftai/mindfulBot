@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"mindfulBot/database"
+	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -48,6 +49,8 @@ func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 			handleSet(bot, message)
 		case "delete":
 			handleDelete(bot, message)
+		case "get":
+			handleGet(bot, message)
 		}
 	}
 	switch message.Text {
@@ -160,9 +163,49 @@ func getAvailableTimes(day string) []string {
 	return slots[day]
 }
 
+// func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
+// 	listWords := strings.Fields(msg.Text)
+// 	var isAlwaysNotification bool
+// 	for i := 0; i < len(listWords); i++ {
+// 		listWords[i] = strings.ToLower(listWords[i])
+// 	}
+
+// 	if len(listWords) >= 5 { // опциональный параметр //
+// 		if listWords[4] == "once" {
+// 			isAlwaysNotification = false
+// 		} else {
+// 			isAlwaysNotification = true
+// 		}
+// 	} else {
+// 		isAlwaysNotification = false
+// 	}
+
+// 	if string(listWords[1][0]) == "@" { // если передали username с собакой(@), то нам это не нужно
+// 		listWords[1] = listWords[1][1:]
+// 	}
+
+// 	if database.IsAdmin(msg.From.UserName) {
+// 		err := database.SaveReminder(database.GetUser(listWords[1]), listWords[1], listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
+// 		// пояснение к магическим цифрам выше:
+// 		// todo refactoring
+// 		// 1 - ник клиента которому нужно поставить напоминание
+// 		// 2 - день недели для напоминания
+// 		// 3 - время напоминания
+// 		if err != nil {
+// 			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Не удалось поставить напоминание. Попробуйте снова"))
+// 			return
+// 		}
+// 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("Уведомление для %v успешно поставлено на %v %v", listWords[1], listWords[2], listWords[3])))
+// 	} else {
+// 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "У вас нет прав администратора для этой операции."))
+// 	}
+// }
+
 func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 	listWords := strings.Fields(msg.Text)
+
 	var isAlwaysNotification bool
+
 	for i := 0; i < len(listWords); i++ {
 		listWords[i] = strings.ToLower(listWords[i])
 	}
@@ -177,12 +220,27 @@ func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 		isAlwaysNotification = false
 	}
 
-	if string(listWords[1][0]) == "@" { // если передали username с собакой(@), то нам это не нужно
-		listWords[1] = listWords[1][1:]
-	}
+	// if string(listWords[1][0]) == "@" { // если передали username с собакой(@), то нам это не нужно
+	// 	listWords[1] = listWords[1][1:]
+	// }
 
 	if database.IsAdmin(msg.From.UserName) {
-		err := database.SaveReminder(database.GetUser(listWords[1]), listWords[1], listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
+		var err error
+
+		if string(listWords[1][0]) == "@" {
+			listWords[1] = listWords[1][1:]
+
+			err = database.SaveReminder(database.GetUser(listWords[1]), listWords[1], listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
+		} else {
+			id, err := strconv.Atoi(listWords[1])
+			if err != nil {
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Не удалось поставить напоминание. Попробуйте снова"))
+				return
+			}
+
+			err = database.SaveReminder(database.GetUserById(id), "", listWords[2], listWords[3], isAlwaysNotification) // todo user id не клиента, а админа. надо поправить
+		}
+
 		// пояснение к магическим цифрам выше:
 		// todo refactoring
 		// 1 - ник клиента которому нужно поставить напоминание
@@ -195,6 +253,26 @@ func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("Уведомление для %v успешно поставлено на %v %v", listWords[1], listWords[2], listWords[3])))
 	} else {
 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "У вас нет прав администратора для этой операции."))
+	}
+}
+
+func handleGet(bot Bot, msg *tgbotapi.Message) {
+	listWords := strings.Fields(msg.Text)
+
+	if database.IsAdmin(msg.From.UserName) && listWords[1] == "id" {
+		users, err := database.GetUsers()
+		if err != nil {
+			bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Не удалось получить пользователей без никнейма."))
+			return
+		}
+
+		message := ""
+
+		for _, user := range users {
+			message += fmt.Sprintf("%d   %s %s\n", user.Id, msg.Chat.FirstName, msg.Chat.LastName)
+		}
+
+		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, message))
 	}
 }
 
