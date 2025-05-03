@@ -28,7 +28,7 @@ func getReminders(db *sqlx.DB) ([]models.Reminder, error) {
 	SELECT id, user_id, username, day, time, remind_1h, remind_24h
 	FROM reminders
 	WHERE remind_1h <= NOW() OR remind_24h <= NOW()
-`)
+	`)
 	if err != nil {
 		log.Printf("Error get reminders: %v", err)
 		return nil, err
