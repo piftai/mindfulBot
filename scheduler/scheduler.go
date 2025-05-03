@@ -64,7 +64,14 @@ func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB) {
 }
 
 func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
-	msg := tgbotapi.NewMessage(reminder.UserID, sendReminderMessage(reminder))
+	msgText := fmt.Sprintf("У тебя запланирована сессия.\n📅 День недели: %v\n🕒 "+
+		"Время: %v\n💳 Ссылка на оплату: %v\n\n"+
+		"Если у тебя изменились планы, напиши специалисту"+
+		" в личку заранее, чтобы обсудить перенос.\n\n"+
+		"Выдели это время только для себя. Найди спокойное место,"+
+		" завари вкусный чай или просто настройся на работу с собой.\n "+
+		"До встречи!", reminder.Day, reminder.Time, paylink)
+	msg := tgbotapi.NewMessage(reminder.UserID, msgText)
 	isUpdated, err := updateReminder(db, reminder)
 	if !isUpdated {
 		log.Printf("Reminder ID:%v did not update, and did not send.\n\nerror is: %v", reminder.ID, err)
