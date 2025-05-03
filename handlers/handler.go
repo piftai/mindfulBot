@@ -1,9 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"mindfulBot/database"
+	"mindfulBot/models"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -269,7 +274,13 @@ func handleGet(bot Bot, msg *tgbotapi.Message) {
 		message := ""
 
 		for _, user := range users {
-			message += fmt.Sprintf("%d   %s %s\n", user.Id, msg.Chat.FirstName, msg.Chat.LastName)
+			firstName, lastName, err := GetUserNameByTgId(user.UserID, os.Getenv("BOT_TOKEN"))
+			if err != nil {
+				bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Не удалось выполнить запрос на сервера телеграма."))
+				return
+			}
+
+			message += fmt.Sprintf("%d   %s %s\n", user.Id, firstName, lastName)
 		}
 
 		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, message))
@@ -310,4 +321,37 @@ func handleDelete(bot Bot, msg *tgbotapi.Message) {
 	}
 
 	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("Отлично, у клиента %v удалилось %v записей.", username, result)))
+}
+
+// Получение имени и фамилии пользователя по id телеграмма
+func GetUserNameByTgId(telegramID int64, botToken string) (string, string, error) {
+	// URL для запроса к Telegram Bot API
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/getChat?chat_id=%d", botToken, telegramID)
+
+	// Выполняем GET-запрос
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Читаем тело ответа
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// Парсим JSON-ответ
+	var tgResp models.TelegramResponse
+	if err := json.Unmarshal(body, &tgResp); err != nil {
+		return "", "", fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	// Проверяем успешность ответа
+	if !tgResp.Ok {
+		return "", "", fmt.Errorf("telegram api error: %s", string(body))
+	}
+
+	// Возвращаем first_name и last_name
+	return tgResp.Result.FirstName, tgResp.Result.LastName, nil
 }

@@ -169,7 +169,7 @@ func GetUsers() ([]models.User, error) {
 	var users []models.User
 
 	// Выполняем запрос
-	rows, err := DB.Query("SELECT id FROM users WHERE username = '' OR username IS NULL")
+	rows, err := DB.Query("SELECT id, user_id FROM users WHERE username = '' OR username IS NULL")
 	if err != nil {
 		log.Printf("GetUsers query error: %v", err)
 		return nil, err
@@ -180,7 +180,7 @@ func GetUsers() ([]models.User, error) {
 	for rows.Next() {
 		var user models.User
 		// Сканируем данные в структуру
-		if err := rows.Scan(&user.Id); err != nil {
+		if err := rows.Scan(&user.Id, &user.UserID); err != nil {
 			log.Printf("GetUsers scan error: %v", err)
 			return nil, err
 		}
