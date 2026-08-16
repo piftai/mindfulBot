@@ -1,20 +1,19 @@
 package scheduler
 
 import (
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/robfig/cron/v3"
 	"log"
 	"mindfulBot/models"
+	"mindfulBot/proteachclient"
+	"strings"
 	"time"
 )
 
-const paylink = "https://www.tinkoff.ru/rm/r_eKPOyRWmNB.XnfPKWHfzr/ZqYFh89264" // link to pay. not a secret so
-
-func Init(bot *tgbotapi.BotAPI, db *sqlx.DB) {
+func Init(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *proteachclient.Cache) {
 	c := cron.New(cron.WithLocation(time.FixedZone("MSK", 3*60*60)))
-	_, err := c.AddFunc("@every 1m", func() { checkReminders(bot, db) })
+	_, err := c.AddFunc("@every 1m", func() { checkReminders(bot, db, cache) })
 	if err != nil {
 		log.Printf("Error AddFunc in cron: %v", err)
 	}
@@ -37,26 +36,33 @@ func getReminders(db *sqlx.DB) ([]models.Reminder, error) {
 	return reminders, nil
 }
 
-func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB) {
+func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *proteachclient.Cache) {
 	reminders, err := getReminders(db)
 	if err != nil {
 		log.Printf("Error checkReminders: %v", err)
 		return
 	}
 	for _, reminder := range reminders {
-		sendReminder(bot, db, reminder)
+		sendReminder(bot, db, reminder, cache)
 	}
 }
 
-func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder) {
-	msgText := fmt.Sprintf("У тебя запланирована сессия.\n📅 День недели: %v\n🕒 "+
-		"Время: %v\n💳 Ссылка на оплату: %v\n\n"+
-		"Если у тебя изменились планы, напиши специалисту"+
-		" в личку заранее, чтобы обсудить перенос.\n\n"+
-		"Выдели это время только для себя. Найди спокойное место,"+
-		" завари вкусный чай или просто настройся на работу с собой.\n "+
-		"До встречи!", reminder.Day, reminder.Time, paylink)
-	msg := tgbotapi.NewMessage(reminder.UserID, msgText)
+func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder, cache *proteachclient.Cache) {
+	config := cache.Get()
+
+	// The 1h threshold is the more time-sensitive one, so prefer it if both
+	// happen to be due at once (e.g. after downtime).
+	template := config.Reminder24h
+	if reminder.Remind1h.Before(time.Now()) {
+		template = config.Reminder1h
+	}
+
+	replacer := strings.NewReplacer(
+		"{day}", reminder.Day,
+		"{time}", reminder.Time,
+		"{paylink}", config.Paylink,
+	)
+	msg := tgbotapi.NewMessage(reminder.UserID, replacer.Replace(template))
 	isUpdated, err := updateReminder(db, reminder)
 	if !isUpdated {
 		log.Printf("Reminder ID:%v did not update, and did not send.\n\nerror is: %v", reminder.ID, err)

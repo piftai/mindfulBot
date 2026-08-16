@@ -49,6 +49,10 @@ func SaveReminder(userID int64, username, day, timeStr string, isAlways bool) er
 		consultationDate = nextWeekday(now, time.Thursday)
 	case "пт":
 		consultationDate = nextWeekday(now, time.Friday)
+	case "сб":
+		consultationDate = nextWeekday(now, time.Saturday)
+	case "вс":
+		consultationDate = nextWeekday(now, time.Sunday)
 	default:
 		return fmt.Errorf("неверный день недели: %s", day)
 	}

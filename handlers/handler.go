@@ -5,6 +5,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"mindfulBot/database"
+	"mindfulBot/proteachclient"
 	"strings"
 )
 
@@ -20,7 +21,17 @@ HandleCallbackQuery нужен для работы с Inline buttons Telegram.
 Это отдельный роутер для Inline data -> он доступен вне пакета
 */
 
-func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+// Handlers holds the shared config cache so handlers can read the bot owner's
+// current slots/texts without a package-level global.
+type Handlers struct {
+	cache *proteachclient.Cache
+}
+
+func New(cache *proteachclient.Cache) *Handlers {
+	return &Handlers{cache: cache}
+}
+
+func (h *Handlers) Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	database.SaveUser(message.From.ID, message.From.UserName)
 
 	listWords := strings.Fields(message.Text)
@@ -34,9 +45,9 @@ func Router(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	}
 	switch message.Text {
 	case "/start":
-		handleStart(bot, message)
+		h.handleStart(bot, message)
 	case "/note":
-		handleNote(bot, message)
+		h.handleNote(bot, message)
 	case "adminPing":
 		handleAdmin(bot, message)
 	}
@@ -58,25 +69,16 @@ func handleAdmin(bot Bot, msg *tgbotapi.Message) {
 	}
 }
 
-func handleRandomNote(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-
-}
-
-func handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	message := tgbotapi.NewMessage(msg.Chat.ID, "Добро пожаловать в осознанные напоминания 🪷\n\n"+
-		"Ты в сервисе записи к практическому психологу Софии. Здесь можно выбрать удобное время для сессии и получать напоминания о встречах.\n\n"+
-		"— Запишись на свободное время\n"+
-		"— Получай автоматические напоминания заранее\n"+
-		"— Если нужно перенести встречу, сообщи об этом заранее\n\n"+
-		"Нажми на команду ниже, чтобы выбрать время сессий 👇🏻\n/note")
+func (h *Handlers) handleStart(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	message := tgbotapi.NewMessage(msg.Chat.ID, h.cache.Get().Welcome)
 	if msgClon, err := bot.Send(message); err != nil {
 		log.Printf("message: %v. does not send: %v", msgClon, err)
 	}
 }
 
-func handleNote(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
-	// creating buttons to pick a day
-	days := []string{"пн", "вт", "ср", "чт", "пт"}
+func (h *Handlers) handleNote(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
+	// creating buttons to pick a day, from the days that currently have configured slots
+	days := h.cache.Get().Days
 	var buttons []tgbotapi.InlineKeyboardButton
 
 	for _, day := range days {
@@ -91,21 +93,21 @@ func handleNote(bot *tgbotapi.BotAPI, msg *tgbotapi.Message) {
 	bot.Send(reply)
 }
 
-func HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func (h *Handlers) HandleCallbackQuery(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	data := update.CallbackQuery.Data
 
 	if strings.HasPrefix(data, "day_") {
-		handleDaySelection(bot, update)
+		h.handleDaySelection(bot, update)
 	} else if strings.HasPrefix(data, "time_") {
-		handleTimeSelection(bot, update)
+		h.handleTimeSelection(bot, update)
 	}
 }
 
-func handleDaySelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func (h *Handlers) handleDaySelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	// to understand how it works check tg documentation
 	day := strings.TrimPrefix(update.CallbackQuery.Data, "day_")
 
-	times := getAvailableTimes(day)
+	times := h.cache.Get().Slots[day]
 
 	// creating buttons to pick a time
 	var buttons []tgbotapi.InlineKeyboardButton
@@ -120,12 +122,17 @@ func handleDaySelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	bot.Send(reply)
 }
 
-func handleTimeSelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func (h *Handlers) handleTimeSelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	// extract day and time
 	data := strings.TrimPrefix(update.CallbackQuery.Data, "time_")
 	parts := strings.Split(data, "_")
 	day := parts[0]
 	time := parts[1]
+
+	if !isConfiguredDay(h.cache.Get().Days, day) {
+		bot.Send(tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Этот день сейчас недоступен для записи."))
+		return
+	}
 
 	// save reminder into database
 	userID := update.CallbackQuery.From.ID
@@ -143,17 +150,13 @@ func handleTimeSelection(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	bot.Send(tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, msg))
 }
 
-func getAvailableTimes(day string) []string {
-	// slots for each day
-	slots := map[string][]string{
-		"пн": {"10:00", "12:00", "18:00"},
-		"вт": {"11:00", "14:00", "16:00"},
-		"ср": {"09:30", "11:30", "18:00"},
-		"чт": {"10:00", "18:00"},
-		"пт": {"10:00"},
+func isConfiguredDay(days []string, day string) bool {
+	for _, d := range days {
+		if d == day {
+			return true
+		}
 	}
-
-	return slots[day]
+	return false
 }
 
 func handleSet(bot Bot, msg *tgbotapi.Message) { // for admins only
