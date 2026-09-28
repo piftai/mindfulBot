@@ -1,0 +1,10 @@
+development:
+  dialect: postgres
+  datasource: dbname=mindful
+  dir: migrations/
+
+production:
+  dialect: postgres
+  datasource: dbname=myapp sslmode=disable
+  dir: migrations/
+  table: migrations
