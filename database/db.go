@@ -3,13 +3,14 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"log"
 	"mindfulBot/models"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 var DB *sqlx.DB
