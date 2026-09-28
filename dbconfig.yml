@@ -1,10 +1,11 @@
 development:
   dialect: postgres
-  datasource: dbname=mindful
+  datasource: dbname=mindfulBot-db sslmode=disable  host=127.0.0.1 port=5432 user=admin password=admin
   dir: migrations/
+  table: migrations
 
 production:
   dialect: postgres
-  datasource: dbname=myapp sslmode=disable
+  datasource: dbname=mindfulBot-db sslmode=disable
   dir: migrations/
   table: migrations
