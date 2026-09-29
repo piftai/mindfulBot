@@ -41,6 +41,9 @@ func TestBotsRepo(t *testing.T) {
 
 		botsRepo := postgres.New(db)
 
+		require.NoError(t, botsRepo.Flush())
+		t.Cleanup(func() { require.NoError(t, botsRepo.Flush()) })
+
 		t.Run("Проверяем добавление нового бота", func(t *testing.T) {
 			bot := models.Bot{
 				StID:      3,
@@ -51,7 +54,14 @@ func TestBotsRepo(t *testing.T) {
 			}
 
 			err := botsRepo.Add(bot)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
+		})
+
+		t.Run("Проверяем получение списка ботов", func(t *testing.T) {
+			bots, err := botsRepo.List()
+			assert.NoError(t, err)
+
+			assert.Len(t, bots, 1)
 		})
 	})
 }
