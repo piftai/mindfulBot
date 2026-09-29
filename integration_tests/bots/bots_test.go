@@ -35,7 +35,7 @@ func connectDB(t *testing.T) *sqlx.DB {
 }
 
 func TestBotsRepo(t *testing.T) {
-	t.Run("Проверяем подключениее к базе данных.", func(t *testing.T) {
+	t.Run("Проверяем подключение к базе данных.", func(t *testing.T) {
 		db := connectDB(t)
 		require.NoError(t, db.Ping())
 
@@ -43,11 +43,10 @@ func TestBotsRepo(t *testing.T) {
 
 		t.Run("Проверяем добавление нового бота", func(t *testing.T) {
 			bot := models.Bot{
-				ID:        1,
-				StID:      2,
+				StID:      3,
 				OwnerID:   777,
 				Name:      "egor_bot",
-				Token:     "HSA:43021901219 598122 402109102 495100 54210042 10",
+				Token:     "HSA:43021901219 598122 402109102 495100 5421004 10",
 				CreatedAt: time.Now(),
 			}
 
