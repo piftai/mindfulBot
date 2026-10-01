@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"mindfulBot/database"
-	"mindfulBot/proteachclient"
+	"mindfulBot/teachsimpleclient"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 /*
@@ -24,10 +25,10 @@ HandleCallbackQuery нужен для работы с Inline buttons Telegram.
 // Handlers holds the shared config cache so handlers can read the bot owner's
 // current slots/texts without a package-level global.
 type Handlers struct {
-	cache *proteachclient.Cache
+	cache *teachsimpleclient.Cache
 }
 
-func New(cache *proteachclient.Cache) *Handlers {
+func New(cache *teachsimpleclient.Cache) *Handlers {
 	return &Handlers{cache: cache}
 }
 

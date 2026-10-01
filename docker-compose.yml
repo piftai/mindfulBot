@@ -1,29 +1,15 @@
-version: '3.8'
+# DEV
 
 services:
-  bot:
-    build: .
-    container_name: mindfulBot
-    restart: always # Автоматический перезапуск при сбое
-    environment:
-      - TELEGRAM_BOT_TOKEN=${BOT_TOKEN}
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=${USER}
-      - DB_PASSWORD=${PASSWORD}
-      - DB_NAME=${DBNAME}
-      - DB_SSLMODE=${SSLMODE}
-      - TZ=Europe/Moscow
-    depends_on:
-      - db
-
   db:
-    image: postgres:13-alpine
+    image: postgres:15
     container_name: mindfulBot-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: ${USER}
-      POSTGRES_PASSWORD: ${PASSWORD}
-      POSTGRES_DB: ${DBNAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
       TZ: "Europe/Moscow"
     volumes:
       - postgres_data:/var/lib/postgresql/data

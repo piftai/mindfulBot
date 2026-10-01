@@ -1,17 +1,18 @@
 package scheduler
 
 import (
+	"log"
+	"mindfulBot/models"
+	"mindfulBot/teachsimpleclient"
+	"strings"
+	"time"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/robfig/cron/v3"
-	"log"
-	"mindfulBot/models"
-	"mindfulBot/proteachclient"
-	"strings"
-	"time"
 )
 
-func Init(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *proteachclient.Cache) {
+func Init(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *teachsimpleclient.Cache) {
 	c := cron.New(cron.WithLocation(time.FixedZone("MSK", 3*60*60)))
 	_, err := c.AddFunc("@every 1m", func() { checkReminders(bot, db, cache) })
 	if err != nil {
@@ -36,7 +37,7 @@ func getReminders(db *sqlx.DB) ([]models.Reminder, error) {
 	return reminders, nil
 }
 
-func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *proteachclient.Cache) {
+func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *teachsimpleclient.Cache) {
 	reminders, err := getReminders(db)
 	if err != nil {
 		log.Printf("Error checkReminders: %v", err)
@@ -47,7 +48,7 @@ func checkReminders(bot *tgbotapi.BotAPI, db *sqlx.DB, cache *proteachclient.Cac
 	}
 }
 
-func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder, cache *proteachclient.Cache) {
+func sendReminder(bot *tgbotapi.BotAPI, db *sqlx.DB, reminder models.Reminder, cache *teachsimpleclient.Cache) {
 	config := cache.Get()
 
 	// The 1h threshold is the more time-sensitive one, so prefer it if both

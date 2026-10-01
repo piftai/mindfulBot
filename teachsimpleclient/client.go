@@ -1,4 +1,4 @@
-package proteachclient
+package teachsimpleclient
 
 import (
 	"context"
@@ -59,7 +59,7 @@ func NewClient(baseURL, token string) *Client {
 }
 
 func (c *Client) Fetch(ctx context.Context) (*Config, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/api/bot-config", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/bot-config", nil)
 	if err != nil {
 		return nil, fmt.Errorf("proteachclient: build request: %w", err)
 	}

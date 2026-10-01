@@ -1,4 +1,4 @@
-package proteachclient
+package teachsimpleclient
 
 import (
 	"context"

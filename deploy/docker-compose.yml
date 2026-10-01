@@ -1,0 +1,39 @@
+# PROD
+
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: mindfulBot
+    restart: always # Автоматический перезапуск при сбое
+    environment:
+      - TELEGRAM_BOT_TOKEN=${BOT_TOKEN}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${USER}
+      - DB_PASSWORD=${PASSWORD}
+      - DB_NAME=${DBNAME}
+      - DB_SSLMODE=${SSLMODE}
+      - TZ=Europe/Moscow
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13-alpine
+    container_name: mindfulBot-db
+    environment:
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASSWORD}
+      POSTGRES_DB: ${DBNAME}
+      TZ: "Europe/Moscow"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro  # Монтируем временную зону с хоста
+      - /usr/share/zoneinfo/Europe/Moscow:/etc/timezone:ro # Монтируем информацию о временной зоне
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "127.0.0.1:5432:5432"
+
+volumes:
+  postgres_data:
