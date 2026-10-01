@@ -10,7 +10,7 @@ type bot struct {
 	// OwnerID - идентификатор владельца в simpleteach.
 	OwnerID int `db:"owner_id"`
 	// Name - имя бота.
-	Name string `db:"name"`
+	Name string `db:"bot_name"`
 	// Token - телеграмм токен бота.
 	Token string `db:"telegram_token"`
 
